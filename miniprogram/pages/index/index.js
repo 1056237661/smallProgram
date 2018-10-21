@@ -79,53 +79,53 @@ Page({
       icon: 'none',
       title: '开始录音'
     })
-    const recorderManager = wx.getRecorderManager();
+    // const recorderManager = wx.getRecorderManager();
 
-    recorderManager.onStart(() => {
-      debugger
-      console.log('recorder start')
-    })
-    recorderManager.onPause(() => {
-      console.log('recorder pause')
-    })
-    recorderManager.onStop((res) => {
-      console.log('recorder stop', res)
-      debugger
-      _this.data.voidUrl = res.tempFilePath;
-    })
-    recorderManager.onFrameRecorded((res) => {
-      const { frameBuffer } = res
-      console.log('frameBuffer.byteLength', frameBuffer.byteLength)
-    })
-
-    const options = {
-      duration: 10000,
-      sampleRate: 44100,
-      numberOfChannels: 1,
-      encodeBitRate: 192000,
-      format: 'mp3',
-      frameSize: 50
-    }
-
-    recorderManager.start(options)
-
-    // wx.startRecord({
-    //   success(res) {
-    //     _this.data.voidUrl = res.tempFilePath;
-    //   }
+    // recorderManager.onStart(() => {
+    //   debugger
+    //   console.log('recorder start')
     // })
-    // setTimeout(function () {
-    //   wx.stopRecord() // 结束录音
-    //   wx.showToast({
-    //     icon: 'none',
-    //     title: '录音结束'
-    //   })
-    //   console.log("stop");
-    // }, 5000)
+    // recorderManager.onPause(() => {
+    //   console.log('recorder pause')
+    // })
+    // recorderManager.onStop((res) => {
+    //   console.log('recorder stop', res)
+    //   debugger
+    //   _this.data.voidUrl = res.tempFilePath;
+    // })
+    // recorderManager.onFrameRecorded((res) => {
+    //   const { frameBuffer } = res
+    //   console.log('frameBuffer.byteLength', frameBuffer.byteLength)
+    // })
 
+    // const options = {
+    //   duration: 10000,
+    //   sampleRate: 44100,
+    //   numberOfChannels: 1,
+    //   encodeBitRate: 192000,
+    //   format: 'mp3',
+    //   frameSize: 50
+    // }
+
+    // recorderManager.start(options)
+
+    wx.startRecord({
+      success(res) {
+        _this.data.voidUrl = res.tempFilePath;
+      }
+    })
     setTimeout(function () {
-      recorderManager.stop() // 结束录音
+      wx.stopRecord() // 结束录音
+      wx.showToast({
+        icon: 'none',
+        title: '录音结束'
+      })
+      console.log("stop");
     }, 5000)
+
+    // setTimeout(function () {
+    //   recorderManager.stop() // 结束录音
+    // }, 5000)
   },
 
   // 上传
