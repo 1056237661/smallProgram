@@ -1,0 +1,76 @@
+<style scoped>
+  .page_list{
+    padding: 2px 8px;
+  }
+  .customer-panel{
+    border-radius: 4px;
+    /* margin-bottom: 5px; */
+  }
+
+  .message-list-name{
+    color: #353535;
+    font-size: 13px;
+  }
+  .message-list-content{
+    /* font-weight:400; */
+    font-size:14px;
+    width:auto;
+    margin: 6px 0;
+    line-height: 1.3;
+  }
+  .message-time{
+    font-size: 11px;
+  }
+  .navifator-customer{
+    padding: 12px;
+  }
+  .customer_icon{
+    width: 49px;
+    height: 49px;
+  }
+  .user_photo{
+    border-radius: 50%;
+  }
+</style>
+
+<template lang="pug">
+
+  view.page_list
+    view.page__bd
+      view.customer-panel.weui-panel.weui-panel_access
+        view.weui-panel__bd( @tap = 'toDetail( {{ dataobj.MU_ID }} )' )
+          //- navigator.navifator-customer.weui-media-box.weui-media-box_appmsg(url="../productDetail/index", hover-class="weui-cell_active")
+          view.navifator-customer.weui-media-box.weui-media-box_appmsg
+            view.weui-media-box__hd.weui-media-box__hd_in-appmsg.customer_icon
+              image.weui-media-box__thumb.user_photo(src="{{ dataobj.US_IMGURL }}")
+            view.weui-media-box__bd.weui-media-box__bd_in-appmsg
+              view.message-list-name {{ dataobj.US_NAME }}
+              view.message-list-content {{ dataobj.COM_CONTENT || '赞了你的歌声' }}
+              view.message-time.weui-media-box__desc {{ dataobj.COM_TIME }}
+  
+</template>
+
+<script>
+import wepy from 'wepy'
+import wxRequest from '@/utils/wxRequest'
+
+export default class newsList extends wepy.component {
+
+  props = {
+    dataobj: Object
+  }
+
+  methods = {
+      // 评论跳转
+      async toDetail (mu_id){
+        const data = await wxRequest.Get('/mydb/Get_MusicInfo',{mu_id:mu_id});
+        const param = JSON.stringify(data);
+        wx.navigateTo({
+          url: `/pages/productDetail/index?dataobj=${param}&focus=0`
+        })
+      }    
+  }
+}
+</script>
+
+

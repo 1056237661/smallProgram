@@ -1,0 +1,150 @@
+<template lang='pug'>
+  view.topPanel.box.flex
+    view.headIcon
+      image.iconStyle(src="{{ userinfo.US_IMGURL }}")
+    view.headName 
+      text.nameStyle {{ userinfo.US_NAME }}
+    view.headPraise.box
+      image.praiseStyle( src='{{praiseSrc}}')
+      text {{ userinfo.RECV_LIKE }}
+      
+  view.weui-cells.weui-cells_after-title
+    navigator.weui-cell.weui-cell_access.customerNav(url="../myProduct/index" hover-class="weui-cell_active")
+      view.weui-cell__hd.customer_hd
+        image.productionImg(src="{{icon}}")
+      view.weui-cell__bd.customer_bd 我的作品
+      view(class="weui-cell__ft weui-cell__ft_in-access") {{ userinfo.MUSIC_COUNT }}
+    navigator.weui-cell.weui-cell_access.customerNav(url="../praised/index" hover-class="weui-cell_active")
+      view.weui-cell__hd.customer_hd
+        image.praiseImg(src="{{iconPraise}}")
+      view.customer_bd(class="weui-cell__bd") 点过的赞
+      view(class="weui-cell__ft weui-cell__ft_in-access") {{ userinfo.MUSIC_LIKE }}
+    //- button.tucao.weui-cell.weui-cell_access.customerNav(open-type="feedback" hover-class="weui-cell_active")
+      view.weui-cell__hd.customer_hd
+        image.praiseImg(src="{{iconPraise}}")
+      view.customer_bd(class="weui-cell__bd") 点击吐槽
+      view(class="weui-cell__ft weui-cell__ft_in-access")
+
+  //- button.feedback( open-type="feedback") 点击吐槽
+</template>
+
+<script>
+import wepy from "wepy"
+import Session from '@/utils/session'
+import wxRequest from '@/utils/wxRequest'
+import wx_req from '@/utils/wxRequest/wx_req'
+import publick_fun from '@/mixins/publick_fun'
+
+export default class Index extends wepy.page {
+  config = {
+    navigationBarTitleText: '唱嗨',
+    enablePullDownRefresh: false
+  }
+
+  mixins = [publick_fun]
+
+  data = {
+    feedbackText: '点 击 吐 槽',
+    name: '王力宏',
+    icon: '../../images/talk01.png',
+    iconPraise: '../../images/praised.png',
+    praiseSrc: '../../images/praised.png'
+    ,userinfo:{}
+  }
+
+  methods = {
+  }
+
+  async onShow(){
+    this.userinfo = await wxRequest.Get('/mydb/Get_UserInfo')
+    this.Get_MessageCount();
+    this.$apply();
+  }
+
+}
+</script>
+
+<style>
+.feedback{
+  width: 100%;
+  color: white;
+  text-align: center;
+  background-color: #000000;
+  opacity: 0.5;
+  position: absolute;
+  bottom: 5px;
+  line-height: 2;
+}
+.customer_hd{
+  position: relative;
+  top: -2px;
+}
+.praiseImg{
+  width: 22px;
+  height: 22px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.productionImg{
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.customerNav{
+  height: 30px;
+}
+.customer_bd{
+  margin-left: 13px;
+}
+.topPanel{
+  background-color: #FFFFFF;
+  /* padding: 12px 12px 24px; */
+  padding: 12px;
+  margin-bottom: 7px;
+}
+.headIcon{
+  -webkit-flex: none;
+  flex: none;
+  width: 93px;
+  height:70px;
+}
+.iconStyle{
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  margin: 0 19px 0 4px;
+}
+
+.headName{
+  -webkit-flex: 1;
+  flex: 1;
+  padding-top: 9px;
+}
+.nameStyle{
+  font-size: 18px;
+  line-height: 18px;
+  color: #353535;
+  font-family:'Microsoft YaHei','Courier New', Courier, monospace;
+}
+
+.headPraise{
+  -webkit-flex: none;
+  flex: none;
+  width: 50px;
+  text-align: center;
+  padding-top: 13px;
+}
+
+.praiseStyle{
+  width: 25px;
+  height: 25px;
+}
+.tucao{
+  text-align:left;
+  background-color:#FFFFFF;
+  height: 50px;
+}
+
+</style>
+ 

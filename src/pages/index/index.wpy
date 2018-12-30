@@ -1,0 +1,381 @@
+<template lang='pug'>
+  //- 录音列表
+  repeat( for="{{dataList}}" key="index" index="index" item="item")
+    recordcard( :dataobj.sync="item", :showCom="showCom", :index.sync='index', @praise.user='praise', @play.user='playMusic' :currentPlayIndex.sync='currentPlayIndex')
+  
+  insert_voice( @refresh.user='getList')
+
+  .mask( wx:if="{{!pageFlag}}" )
+  .mask_inner(wx:if="{{!pageFlag}}")
+    image.mask_imgBox( src='{{ mask_img }}')
+    view.mask_text 唱嗨你我，欢迎回家
+    button.mask_btn(open-type="getUserInfo" bindgetuserinfo="bindGetUserInfo") 马上进门
+
+            
+</template>
+
+<script>
+import wepy from "wepy"
+import wxRequest from '@/utils/wxRequest'
+import tip from '@/utils/tip'
+import Publick_fun from '../../mixins/publick_fun'
+import Host from '@/utils/host'
+import Session from '@/utils/session'
+import wx_req from '@/utils/wxRequest/wx_req'
+
+import recordCard from '@/components/record-card'
+import insert_voice from '@/components/insert_voice'
+
+
+const loginKey = Session.key.login
+
+export default class Index extends wepy.page {
+
+  config = {
+    navigationBarTitleText: '唱嗨',
+    // disableScroll: true,
+    // enablePullDownRefresh: false
+  }
+  
+  mixins = [Publick_fun]
+
+  data = {
+    pageFlag: true,
+    loading: true,   // 默认加载中
+    src: '',
+    mask_img: '../../images/auth.jpg',
+    praisesrc: '../../images/praised.png',
+    page:{
+      PageNo: 1,
+      PageSize: 10
+    },
+    total:0,
+    dataList:[],
+    showCom: true,
+    currentPlayIndex: -1
+  }
+  
+  components = {
+    recordcard: recordCard,
+    insert_voice: insert_voice
+  }
+
+  //事件处理函数(集中保存在methods对象中)
+  methods = {
+    // 播放音乐
+    playMusic(index){
+      this.currentPlayIndex = index
+      this.$apply()
+    },
+    // 点赞/取消赞
+    praise(index){
+      let item = this.dataList[index];
+      this.fun_praise(item.MU_ID, item.LIKE_STATUE);
+      item.MU_LIKE += item.LIKE_STATUE? -1 : 1 ;
+      item.LIKE_STATUE = !item.LIKE_STATUE;
+      this.$apply();
+    },
+    // 成功授权回调
+    async bindGetUserInfo (e) {
+      const userInfo = e.detail.userInfo || null;  //获取用户信息
+      if(userInfo){
+        // 授权成功
+        await wxRequest.reLogin();
+        this.Get_MessageCount();
+        wx.showTabBar()
+        this.getPreOrders()
+        this.pageFlag = true;
+        this.$apply();
+      }
+    },
+
+    getList(){
+      this.getPreOrders();
+    }
+  }
+
+  // 获取列表
+  async getPreOrders(num) {
+    tip.loading();
+    this.dataList =  [];
+    this.page.PageNo = 1;
+    this.page.PageSize = num || 10 ;
+    const data = await wxRequest.Get('/mydb/Get_NewMusic',this.page);
+    this.total = data.total;
+    this.dataList = data.list
+    this.loading = false
+    this.$apply()
+    tip.loaded();
+    return true;
+  }
+
+  //页面的生命周期函数
+  async onLoad() {
+    this.pageFlag = wx_req.getSession_id() || false ;
+    this.pageFlag && ( wx.showTabBar(), this.getPreOrders() );// 加载列表
+    !this.pageFlag && (wx.hideTabBar(),this.getPreOrders(4));
+    this.$apply();
+  }
+
+  // 下拉刷新
+  async onPullDownRefresh(){
+    if(this.pageFlag){
+      wx.showNavigationBarLoading();  //导航栏加载中动画
+      let flag = await this.getPreOrders();
+      wx.stopPullDownRefresh({
+          success(){ wx.hideNavigationBarLoading(); }
+          ,fail(){ console.log('下拉刷新 fail') }
+          ,complete(){ console.log('下拉刷新 complete') }
+      });
+    }else{
+       wx.stopPullDownRefresh();
+    }
+  }
+
+  // 上拉加载
+  async onReachBottom (){
+    if(this.pageFlag){
+      tip.loading('玩命加载中');
+      const PageNo = this.total/this.page.PageSize;
+      if( PageNo > this.page.PageNo ){
+        this.page.PageNo++
+        const data = await wxRequest.Get('/mydb/Get_NewMusic',this.page);
+        this.total = data.total;
+        this.dataList.push(...data.list);
+        this.$apply()
+        tip.loaded();
+      }else{
+        tip.toast("扯到 👖 了，还拉！", 'none')
+      }
+    }
+  }
+  
+  onShow () {
+    this.$invoke('recordcard', 'musicStop');
+    this.Get_MessageCount();
+  }
+  
+  onHide() {
+    this.$invoke('recordcard', 'musicStop');
+  }
+}
+</script>
+
+
+<style>
+
+  .mask{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    background-color: #000000;
+    opacity: 0.6;
+  }
+
+  .mask_inner{
+    position: absolute;
+    top: 24%;
+    left: 10%;
+    width: 80%;
+    height: 214px;
+    background-color:#ffffff;
+    border-radius: 12px;
+    opacity: 1;
+  }
+
+  .mask_btn{
+    border-radius:38px;
+    border:0;
+    background-color:#F94949;
+    color:#FFF;
+    padding:0;
+    line-height:1.8;
+    width:68%;
+    margin-top: 7px;
+    border: 0;
+  }
+
+  .mask_imgBox{
+    width: 100%;
+    height: 124px;
+    border-radius: 12px 12px 0;
+  }
+
+  .mask_text{
+    color: #868686;
+    width: 100%;
+    text-align: center;
+  }
+
+  .record{
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: blueviolet;
+    border-radius: 50%;
+    bottom: 0;
+    left: 50%;
+    margin-left: -25px;
+  }
+
+  .wlhPanel{
+    background-color: white;
+    margin: 12px;
+    padding: 12px;
+  }
+  .wlhPanelLeftBox {
+    -webkit-flex: none;
+            flex: none;
+    width: 57px;
+  }
+  .wlhPanelRightBox {
+    -webkit-flex: 1;
+    flex: 1;
+  }
+  .panelTitle {
+    -webkit-flex: 1;
+    flex: 1;
+    padding: 4px 0 0;
+    line-height: 0;
+  }
+  .imgStyle {
+    width: 49px;
+    height: 49px;
+    border-radius: 50%;
+  }
+  .titleStyle {
+    font-size: 17px;
+    color: #353535;
+    line-height: 20px;
+    font-family:'Microsoft YaHei','Courier New', Courier, monospace;
+  }
+  .timeStyle {
+    font-size: 12px;
+    color: #C6C6C6;
+    line-height: 12px;
+    font-family:'Microsoft YaHei','Courier New', Courier, monospace;
+  }
+
+  .panelMusic{
+    margin-top: 5px;
+    line-height: 0;
+  }
+  .musicBgmBox{
+    -webkit-flex: none;
+            flex: none;
+    width: 57px;
+    height: 48px;
+  }
+  .musicBgmStyle{
+    width: 100%;
+    height: 100%;
+  }
+  .musicPraise{
+    -webkit-flex: 1;
+    flex: 1;
+    background-color: #F3F3F3;
+  }
+  .musicCommon{
+    -webkit-flex: none;
+    flex: none;
+    width: 41px;
+    height: 48px;
+  }
+  .commonStyle{
+    width: 36px;
+    margin-left: 5px;
+    background-color: #F94949;
+    text-align: center;
+    color: white;
+    font-family: 'Microsoft YaHei','Courier New', Courier, monospace;
+  }
+  .commonImgStyle{
+    height: 50%;
+    padding-top: 9px;
+  }
+  .commonTextStyle{
+    height: 50%;
+    font-size: 11px;
+    line-height: 19px;  
+    padding-top:2px;
+  
+  }
+  .commonBgStyle{
+    width: 22px;
+    height: 18px;
+  }
+
+  .praiseTextBox{
+    -webkit-flex: 1;
+    flex: 1;
+    padding-left: 16px;
+  }
+  .praiseBtnBox{
+    -webkit-flex: none;
+            flex: none;
+    width: 50px;
+    height: 100%;
+  }
+  .praiseBtnStyle{
+    width: 100%;
+    text-align: center;
+  }
+  .praiseBtnStyle_1{
+    height: 47%;
+    padding-top: 7px;
+  }
+  .praiseBtnStyle_2{
+    height: 40%;
+    color: #F94949;
+    line-height: 12px;
+    font-size: 12px;
+    margin-top: 6px;
+    font-family: 'Microsoft YaHei','Courier New', Courier, monospace;
+  }
+  .praiseBgStyle{
+    width: 22px;
+    height: 22px;
+  }
+  .praiseTextStyle{
+    margin-top: 13px;
+    line-height: 17px;
+    font-size: 16px;
+    color: #1A1A1A;
+    font-family: 'Microsoft YaHei','Courier New', Courier, monospace;
+  }
+  .timeStyle , .listenNum{
+    width: 10px;
+    height: 10px;
+    position: relative;
+    top: 2px;
+  }
+  .listenNum{
+    margin-left: 14px;
+  }
+  .textSmall{
+    color: #888888;
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  @media screen and (min-width: 100px) and (max-width:350px) {
+    .musicBgmBox {
+      width: 50px;
+    }
+    .praiseTextBox{
+      -webkit-flex: 1;
+      flex: 1;
+      padding-left: 6px;
+    }
+    .praiseBtnBox {
+      -webkit-flex:none;
+      flex:none;
+      width:36px;
+      height:100%;
+    }
+    .listenNum{
+      margin-left: 8px;
+    }
+  }
+</style>
+

@@ -1,0 +1,23 @@
+<style scoped>
+.lessData{
+  text-align: center;
+  margin-top: 35%;
+}
+
+</style>
+
+<template lang="pug">
+  view.lessData {{ text }}
+  
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class test extends wepy.component {
+  props = {
+    text: String
+  }
+  
+}
+</script>

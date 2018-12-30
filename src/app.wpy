@@ -1,0 +1,100 @@
+<style>
+@import 'style/weui.wxss';
+  .container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+  
+  page{
+    background-color: #F3F3F3;
+  }
+
+  .flex {
+    display: -webkit-flex;
+    display: flex;
+  }
+
+  .box{
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+</style>
+
+<script>
+import wepy from 'wepy'
+import tip from '@/utils/tip'
+import 'wepy-async-function'
+
+
+export default class extends wepy.app {
+  config = {
+    pages: [
+      'pages/index/index',
+      'pages/messageList/index',
+      'pages/myProduct/index',
+      'pages/praised/index',
+      'pages/personal/index',
+      'pages/productDetail/index',
+      'pages/index',
+      'pages/authorize/index'
+    ],
+    window: {
+      backgroundTextStyle: 'light'
+      ,navigationBarBackgroundColor: '#F94949'
+      ,navigationBarTitleText: 'WeChat'
+      ,navigationBarTextStyle: 'white'
+      ,enablePullDownRefresh: true
+      ,onReachBottomDistance: 5
+      ,backgroundTextStyle: 'dark'
+    },
+    tabBar: {
+      color: "#C5C5C5",
+      selectedColor: "#F94949",
+      backgroundColor:"#FFFFFF",
+      borderStyle: "black",
+      list: [
+        {
+          selectedIconPath: "/images/sms_a.png",
+          iconPath: "/images/sms.png",
+          pagePath: "pages/messageList/index",
+          text: "消息"
+        },
+        {
+          selectedIconPath: "/images/home_a.png",
+          iconPath: "/images/home.png",
+          pagePath: "pages/index/index",
+          text: "首页"
+        },
+        {
+          selectedIconPath: "/images/per_a.png",
+          iconPath: "/images/per.png",
+          pagePath: "pages/personal/index",
+          text: "我的"
+        }
+      ]
+    }
+  }
+
+  globalData = {
+    userInfo: null,
+    recorderManager: null,
+    innerAudioContext: null,
+    voiceSrc: '',
+    endCallback:null,
+    currentMuId:''   //当前播放音乐的ID
+  }
+
+  constructor () {
+    super()
+    this.use('requestfix')
+  }
+
+  onLaunch() {
+    
+  }
+}
+</script>

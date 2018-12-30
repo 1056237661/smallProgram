@@ -1,0 +1,328 @@
+<template lang="pug">
+  view( hidden ='{{!hiddenVoicePanel}}')
+    image.playStyle( @tap="openPanel", src='{{ voiceTubeImg }}')
+  view(hidden ='{{hiddenVoicePanel}}')
+    view.circle
+      view.textStyle {{ second }} S
+      view.btnStyle.box
+        image.freshStyle( hidden='{{btnFlag}}' @tap="refresh", src='{{ freshImg }}')
+        image.startStyle( @tap="start_stop_fun", src='{{ start_stop_Flag ? stopVoiceImg : startVoiceImg }}')
+        image.sendStyle( hidden='{{btnFlag}}' @tap="uploadVoid", src='{{ sendImg }}')
+        image.deleteStyle( @tap="closePanel", src='{{ deleteImg }}')
+</template>
+
+<script>
+import wepy from "wepy"
+import tip from '@/utils/tip'
+import Session from '@/utils/session'
+import staticData from '@/utils/staticData'
+
+export default class insert_voice extends wepy.component {
+  data = {
+    // 静态数据
+    voiceTubeImg: '../../images/voiceTube.png',
+    freshImg:'../../images/fresh.png',
+    sendImg:'../../images/send.png',
+    deleteImg:'../../images/delete.png',
+    startVoiceImg:'../../images/startVoice.png',
+    stopVoiceImg:'../../images/stopVoice.png',
+    
+
+    // 动态数据
+    recorderManager: null,         // 录音控件
+    backgroundAudioManager: null,  // 播放控件
+    voiceSrc:'',             // 当前录音临时路径
+    timerClock: 0,        // 定时器
+    second: 0,               // 录音秒数
+    src:'',
+
+    // 开关控制
+    hiddenVoicePanel: true,           //录音面板
+    start_stop_Flag: true,
+    recordFinish: false,              // 标识当前录音是否完成
+    btnFlag: true                     // 重录和发送按钮 默认隐藏
+  }
+  
+  methods = {
+    // 长摁拖拽
+
+    // 点击录音按钮
+    openPanel() {
+      this.hiddenVoicePanel = false     // 打开录音面板
+      this.start_stop_Flag = true
+      this.$apply()
+      this.startRecordMp3()             // 开始录音
+    },
+
+    // 关闭控制面板，结束录音
+    closePanel() {
+      this.closePanel_mth();
+    },
+    
+    // 开始暂停 切换
+    start_stop_fun(){
+      this.judgePlayStatus()
+      this.$apply()
+    },
+
+    // 刷新重来
+    refresh(){
+      this.stopAllProgress();
+      this.hiddenVoicePanel = false     // 打开录音面板
+      this.start_stop_Flag = true
+      this.$apply()
+      this.startRecordMp3()             // 开始录音
+    },
+
+    // 录音上传
+    uploadVoid() {
+      if(!this.voiceSrc){
+        tip.alert('请先录制音频')
+        return;
+      }
+      let _this = this;
+      tip.toast("开始上传！",'none')
+      console.log("上传URL" + this.voiceSrc);
+      wx.uploadFile({
+        url: 'https://miaohudong.com/FileTrans/FileUpload',
+        filePath: this.voiceSrc,
+        header: { 
+          'content-type': 'multipart/form-data',
+          'session_id': Session.get('weapp_login_session')
+        },
+        name: 'file',
+        formData: {
+          mu_name: this.randomName(),
+          audio_ms: this.second * 1000
+        }, 
+        success: res => {
+          tip.success('上传完毕')
+          this.$emit('refresh') //刷新
+          this.closePanel_mth()
+        },
+        fail: err => {          
+          tip.error(err);
+          console.log(err)
+        }
+      })
+    }
+  }
+
+  randomName() {
+    return  staticData.songNames[Math.round(Math.random()*staticData.songNames.length)] || '神曲';
+  }
+
+  // 关闭面板
+  closePanel_mth() {
+    this.stopAllProgress()
+    this.hiddenVoicePanel = true  //关闭面板
+    this.$apply()
+  }
+
+  // 停止当前所有录音进程
+  stopAllProgress() {
+    // 停止录音、停止播放、停止计时、全部初始化
+    !this.recordFinish && this.start_stop_Flag && this.stopRecord()  // 状态（录音未完成，且正在录音），停止录音
+    !this.recordFinish && this.start_stop_Flag                       // 状态（录音未完成，已停止录音），清空录音数据
+    this.recordFinish && this.start_stop_Flag && this.musicStop()   // 状态（录音已完成，正在播放），停止播放
+    !this.recordFinish && this.start_stop_Flag                       // 状态（录音已完成，没有播放），清空录音数据
+    
+    this.voiceSrc = ''                           // 临时路径清除
+    this.clearTime()                             // 定时器清除
+    this.second = 0                              // 秒数归0
+    this.start_stop_Flag = true                  // 按钮暂停
+    this.btnFlag = true                          // 隐藏发送、重录
+    this.recordFinish = false                    // 状态归0
+  }
+
+  // 判断当前播放状态，进行不同的操作
+  judgePlayStatus() {
+    // 判断是否录制完成
+      if(!this.recordFinish){
+        // 没录制完成（ 停止录音操作 ）
+        if( this.second >= staticData.bigVoiceTime ){
+          // 录音超过60S
+          this.btnFlag = false            // 显示发送、重录
+          this.recordFinish = true        // 录音完成
+          this.clearTime()
+          tip.toast('暂时只支持60S录音！')
+        }else{
+          if(this.start_stop_Flag){
+            this.start_stop_Flag = false    // 停止按钮
+            this.btnFlag = false            // 显示发送、重录
+            this.recordFinish = true        // 录音完成
+            this.stopRecord()               // 停止录音
+          }else{
+            this.start_stop_Flag = true     // 开始按钮
+            this.btnFlag = true             // 隐藏发送、重录
+            this.startRecordMp3()           // 开始录音
+          }
+        }
+      }else{
+        // 录制完成 （ 进行播放、暂停操作 ）
+        if(this.start_stop_Flag){
+          // 停止播放
+          this.musicStop()
+          this.start_stop_Flag = false
+        }else{
+          // 开始播放
+          this.musicPlay(this.voiceSrc)
+          this.start_stop_Flag = true
+        }
+      }
+  }
+
+  // 音乐播放
+  musicPlay(src,MU_NAME){
+    this.backgroundAudioManager.title = MU_NAME || '试听';
+    this.backgroundAudioManager.src = src
+  }
+
+  // 音乐暂停
+  musicStop(){
+    this.backgroundAudioManager.stop()   //停止播放
+  }
+
+  // 开始录音
+  startRecordMp3() {
+    this.recorderManager.start({ format: 'mp3' });
+  }
+
+  // 录音计时
+  timer(){
+    clearInterval(this.timerClock);   // 保障同一时间内只存在一个定时器
+    this.timerClock = setInterval(() => {
+      if( this.second >= staticData.bigVoiceTime ){        
+        this.judgePlayStatus()
+        this.$apply()
+      }else{
+        this.second++
+        this.$apply()
+      }
+    }, 1000);
+  }
+
+  // 清除计时器
+  clearTime(){
+    clearInterval(this.timerClock);
+  }
+
+  // 停止录音
+  stopRecord() {
+    tip.toast('录音停止')
+    this.recorderManager.stop()
+    this.clearTime()
+  }
+
+  onLoad(){
+    this.recordInitail();
+  }
+  
+  // 录音 初始化
+  recordInitail(){
+  
+    this.recorderManager = wx.getRecorderManager();
+
+    this.recorderManager.onStart(_ =>{
+      // 成功开始录 （提示录音开始、改变按钮状态、秒计时）
+      tip.toast('开始录音')
+      this.timer()
+    });
+
+    this.recorderManager.onError(_ =>{
+      tip.error("录音失败！")  // 录音失败
+    });
+
+    this.recorderManager.onStop(res =>{
+      // 录音完成
+      this.voiceSrc = res.tempFilePath
+      this.start_stop_Flag = false    // 录音按钮显示 start
+      this.$apply();
+      console.log('录音完成')
+    });
+    
+    
+    this.backgroundAudioManager = wx.getBackgroundAudioManager();
+
+    this.backgroundAudioManager.onEnded(res =>{
+      // 自然播放结束
+      this.start_stop_Flag = false;
+      this.btnFlag = false            // 显示发送、重录
+      this.$apply()
+    })
+    this.backgroundAudioManager.onError(res =>{
+      tip.error('播放出错')
+      this.start_stop_Flag = false;
+      this.btnFlag = false            // 显示发送、重录
+      this.$apply()
+    })
+
+  }
+  
+}
+</script>
+
+<style>
+  .freshStyle{
+    vertical-align: top;
+    width: 28px;
+    height: 28px;
+    margin: 16px 20px 0;
+  } 
+  .sendStyle{
+    vertical-align: top;
+    width: 34px;
+    height: 34px;
+    margin: 15px 14px 0;
+  }
+  .startStyle{
+    vertical-align: top;
+    width: 48px;
+    height: 48px;
+    margin: 6px 10px;
+
+  }
+  .deleteStyle{
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    right: 8px;
+    top: 2px;    
+  }
+  .btnStyle{
+    width: 100%;
+    height: 60px;
+    text-align: center;
+    position: relative;
+  }
+  .textStyle{
+    width: 100%;
+    height: 35px;
+    color: white;
+    font-size: 26px;
+    text-align: center;
+  }
+  .circle{
+    width: 100%;
+    height: 100px;
+    background-color: #000000;
+    opacity: 0.65;
+    position: fixed;
+    bottom: 0;
+    border-radius: 100% 100% 0 0;
+  }
+  .playStyle{
+    text-align: center;
+    width: 48px;
+    height: 48px;
+    line-height: 48px;
+    border-radius: 50%;
+    background-color: #fff;
+    position: fixed;
+    bottom: 11px;
+    left: 50%;
+    margin-left: -24px;
+    z-index: inherit;
+  }
+
+</style>

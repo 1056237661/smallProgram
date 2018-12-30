@@ -1,0 +1,44 @@
+<template lang='pug'>
+  view
+    br
+    br
+    button(class="weui-btn" type="primary" open-type="getUserInfo" bindgetuserinfo="bindGetUserInfo") 用户信息授权
+    //- button(class="weui-btn" type="primary" open-type="share") 转发
+    //- button(class="weui-btn" type="primary" open-type="getPhoneNumber" bindgetphonenumber="getphonenumber") 获取手机号
+    //- button(class="weui-btn" type="primary" open-type="openSetting") 授权设置
+    button(class="weui-btn" type="primary" @tap="backHome") 返回首页
+    //- button(class="weui-btn" type="primary" open-type="feedback") 意见反馈
+    //- button(class="weui-btn" type="primary" open-type="contact") 客服
+
+</template>
+
+<style>
+</style>
+
+<script>
+import wepy from "wepy"
+import session from '@/utils/session'
+
+export default class Authorize extends wepy.page {
+  config = {
+    navigationBarTitleText: '授权'
+  }
+
+  methods = {
+    backHome(){
+      // 强制跳转到首页
+      wx.switchTab({
+        url: '/pages/index/index'
+      })
+    }
+  }
+
+  // 成功授权回调
+  bindGetUserInfo (e) {
+    // 获取用户信息、全局保存、查询session保存
+    // session.userInfo = e.detail.userInfo
+    // 返回上一级页面
+    wx.navigateBack({delta:1})
+  }
+}
+</script>

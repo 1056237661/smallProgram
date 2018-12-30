@@ -1,0 +1,76 @@
+<template lang='pug'>
+
+  //- 录音列表
+  repeat( for="{{dataList}}" key="index" index="index" item="item")
+    recordcard( :dataobj.sync="item", :showCom="showCom", :index.sync='index', @praise.user='praise', @play.user='playMusic' :currentPlayIndex.sync='currentPlayIndex')
+  
+  noData(wx:if="{{ dataList.length == 0 }}" :text="noDataText")
+    
+</template>
+
+<script>
+import wepy from "wepy"
+import wxRequest from '@/utils/wxRequest'
+import recordCard from '@/components/record-card'
+import noData from '@/components/noData'
+import publick_fun from '../../mixins/publick_fun'
+
+export default class Praised extends wepy.page {
+  
+  config = {
+    navigationBarTitleText: '点过的赞',
+    enablePullDownRefresh: false
+  }
+
+  mixins = [publick_fun]
+
+  components = {
+    recordcard: recordCard,
+    noData: noData
+  }
+
+  data = {
+    noDataText:'😂，去点赞 ？',
+    praiseSrc: '../../images/praised.png',
+    showCom: true,
+    page: {
+      PageNo: '1',
+      PageSize: '10'
+    },
+    dataList:[],
+    currentPlayIndex: -1
+  }
+
+  methods = {
+    // 点赞/取消赞
+    praise(index){
+      let item = this.dataList[index];
+      this.fun_praise(item.MU_ID, item.LIKE_STATUE);
+      item.MU_LIKE += item.LIKE_STATUE? -1 : 1 ;
+      item.LIKE_STATUE = !item.LIKE_STATUE;
+      this.$apply();
+    },
+    // 播放音乐
+    playMusic(index){
+      this.currentPlayIndex = index
+      this.$apply()
+    },
+  }
+
+  async onShow(){
+    let dataList = await wxRequest.Get('/mydb/Get_UsersLike',this.page)
+    this.dataList = dataList.list;
+    this.Get_MessageCount();
+    this.$apply();
+  }
+  
+  onHide() {
+    this.$invoke('recordcard', 'musicStop');
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+

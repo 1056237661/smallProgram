@@ -1,0 +1,88 @@
+<template lang='pug'>
+  repeat( for="{{ listData }}" key="index" index="index" item="item")
+    new_list( :dataobj="item" )
+  noData( wx:if="{{ listData.length == 0 }}" :text='noDataText' )
+</template>
+
+<style>
+
+</style>
+
+<script>
+import wepy from "wepy";
+import wxRequest from '@/utils/wxRequest'
+import tip from '@/utils/tip'
+
+import new_list from '@/components/news_list'
+import noData from '@/components/noData'
+
+export default class MessageList extends wepy.page {
+  config = {
+    navigationBarTitleText: '收到的消息',
+  }
+
+  components = {
+    new_list: new_list,
+    noData: noData
+  }
+  
+  data = {
+    noDataText: '',
+    icon60: '../../images/user1.png',
+    page:{
+      PageNo: '1',
+      PageSize: '10'
+    },
+    listData:[],
+    total: 0
+  }
+
+  onShow(){
+    this.getList();
+  }
+
+  // 获取信息
+  async getList(){
+    // tip.loading();
+    this.listData =  [];
+    this.page.PageNo = 1;
+    let listData = await wxRequest.Get('/mydb/Get_UserMassage', this.page);
+    this.listData = listData.list || [];
+    this.total = listData.total || 0
+    !this.listData.length && (this.noDataText = '世界辣么大，咱就没人联系我😡');
+    wx.removeTabBarBadge({index: 0})  // 清除徽章
+    this.$apply();
+    // tip.loaded();
+  }
+
+  // 下拉刷新
+  async onPullDownRefresh(){
+    let flag = await this.getList();
+    wx.stopPullDownRefresh({
+        success(){ console.log('下拉刷新 success') }
+        ,fail(){ console.log('下拉刷新 fail') }
+        ,complete(){ console.log('下拉刷新 complete') }
+    });
+  }
+
+  // 上拉加载
+  async onReachBottom (){
+    tip.loading('玩命加载中');
+    const PageNo = this.total/this.page.PageSize;
+    if( PageNo > this.page.PageNo ){
+      this.page.PageNo++
+      const data = await wxRequest.Get('/mydb/Get_UserMassage',this.page);
+      this.total = data.total;
+      this.listData.push(...data.list);
+      this.$apply()
+      tip.loaded();
+    }else{
+      tip.toast("做人不能没有底线", 'none')
+    }
+  }
+}
+</script>
+
+
+
+

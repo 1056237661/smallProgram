@@ -1,0 +1,143 @@
+
+<template lang="pug">
+  view.comment_input.box.flex
+    //- view.changeType
+      image.typeImgStyle(src='{{ typeIcon }}')
+    view.input_box.box
+      input.inputStyle( placeholder='{{inputPlaceholder}}' value="{{inputValue}}" bindinput="bindKeyInput" cursor-spacing="20" bindconfirm="test")
+    view.changeType
+      button.weui-btn.mini-btn( @tap='send', type="primary" size="mini") 发送
+      //- image.typeImgStyle(catchtap="send", src='{{ emojIcon }}')
+  
+</template>
+
+<script>
+/**
+ * 传值 mu_id:歌曲ID、com_replyid:0-评论本歌曲，us_id-评论某人的评论
+ * **/ 
+import wepy from 'wepy'
+import wxRequest from '@/utils/wxRequest'
+import tip from '@/utils/tip'
+import Session from '@/utils/session'
+
+export default class CommentInput extends wepy.component {
+
+  data = {
+    inputPlaceholder: '点评歌曲',
+    typeIcon: '../../images/keyIcon.png',
+    emojIcon: '../../images/emoj.png',
+    
+    inputValue:'',  //输入内容
+
+    com_replyname: '',   //默认为空
+    com_replyid: '0'     //默认0
+
+  }
+
+  props = {
+    mu_id: String
+  }
+
+  methods = {
+    // 发起评论
+    send(){
+      this.Insert_Comment();
+    },
+    test(){
+      this.Insert_Comment();
+      console.log("键盘收起来了")
+    },
+    someMethod(obj){
+      this.inputPlaceholder = obj.id == '0'? '点评歌曲:' : `回复${ obj.name }:`;
+      this.com_replyname = obj.name;
+      this.com_replyid = obj.id;
+      this.$apply();
+    },
+    // 输入内容
+    bindKeyInput(e) {
+      this.inputValue = e.detail.value
+      this.$apply()
+    }
+  }
+
+  // 初始化数据
+  initival(){
+    this.inputValue = ''; // 清空
+    this.com_replyid = '0';
+    this.inputPlaceholder = '点评歌曲';
+    this.$apply();
+  }
+
+  // 发表评论
+  Insert_Comment(){
+    if(!this.inputValue){
+      tip.toast("评论消息不能为空",'none')
+      return
+    }
+    wxRequest.Get('/mydb/Insert_Comment',{
+      mu_id: this.mu_id,
+      com_replyid: this.com_replyid, // 0评论歌曲、userid
+      com_content: this.inputValue
+    }).then(_=>{
+      if(_ == 'insert'){
+        tip.success("评论成功");
+        // 清空列表 刷新
+        this.$emit('refresh') //刷新
+        this.initival(); // 初始化数据
+      }else{
+        tip.error("评论失败")
+      }
+    })
+  }
+
+  onLoad(){
+    this.initival();  //
+  }
+}
+</script>
+
+<style scoped>
+.weui-btn{
+  background-color: #F94949;
+  font-size: 13px;
+  padding: 5px 15px;
+}
+
+.typeImgStyle{
+  width: 100%;
+  height: 100%;
+}
+
+.changeType{
+  -webkit-flex: none;
+  flex: none;
+  width:  64px;
+  height: 33px;
+  margin: 5px;
+}
+
+.input_box{
+  -webkit-flex: 1;
+  flex: 1;
+}
+
+.inputStyle{
+  background-color: white;
+  border-radius: 5px;
+  margin: 5px;
+  height:33px;
+  padding: 3px 5px;
+  /* border: 1px solid rgb(219, 219, 219); */
+}
+
+.comment_input{
+  width: 100%;
+  height: 49px;
+  box-shadow: 0px -1px 1px rgb(219, 219, 219);
+  position: fixed;
+  bottom: 0;
+  background-color: #F3F3F3;
+}
+
+</style>
+  

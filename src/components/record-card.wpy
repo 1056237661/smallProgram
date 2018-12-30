@@ -1,0 +1,350 @@
+<template lang='pug'>
+  //- repeat( for="{{dataobj}}" key="index" index="index" item="item")
+  view.wlhPanel.flex.box
+    view.wlhPanelLeftBox
+      image.imgStyle(src='{{ dataobj.US_IMGURL }}')
+    view.wlhPanelRightBox( @tap='toComment(0)')
+      view.panelTitle 
+        text.titleStyle {{ dataobj.US_NAME }} \n
+        text.timeStyle {{ dataobj.MU_TIME }}
+      view.panelMusic.flex
+        view.musicBgmBox( catchtap="play({{ dataobj.MU_ID }},{{dataobj.MU_NAME}},{{index}})")
+          image.musicBgmStyle(src='{{ musicImgBg }}')
+          view.musicBtn
+            image.musicBtnImg( wx:if="{{ currentPlayIndex === index }}" src='{{ musicBtnPlayImg }}')
+            image.musicBtnImg( wx:else src='{{ musicBtnStopImg }}')
+
+        view.musicPraise.flex
+          view.praiseTextBox.box
+            view.praiseTextStyle {{ dataobj.MU_NAME }}
+            view
+              image.timeStyle(src="{{ timeImgUrl }}") 
+              text.textSmall {{ dataobj.MU_DURATION/1000 }}s
+              image.listenNum(src="{{ listenImgUrl }}") 
+              text.textSmall {{ dataobj.MU_COUNT }}
+          view.praiseBtnBox.box( catchtap="praise( {{index}} )" )
+            view.praiseBtnStyle.box.praiseBtnStyle_1
+              image.praiseBgStyle( src='{{ dataobj.LIKE_STATUE ? praisedSrc : praiseSrc }}')
+            view.praiseBtnStyle.box.praiseBtnStyle_2 {{ dataobj.MU_LIKE }}
+        view( catchtap='toComment(1)' hover-class="navigator-hover" wx:if="{{showCom}}")
+          view.musicCommon
+            view.commonStyle.box.commonImgStyle
+              image.commonBgStyle(src='{{ commonImgUrl }}')
+            view.commonStyle.box.commonTextStyle 评论
+
+</template>
+<script>
+  import wepy from 'wepy'
+  import tip from '@/utils/tip'
+
+  export default class RecordCard extends wepy.component {
+    props = {
+      dataobj: {
+        type: Object,
+        default: [],
+        twoWay: true
+      },
+      showCom: {
+        type: Boolean,
+        default: false
+      },
+      noNaviga: {
+        type: Boolean,
+        default: false
+      },
+      index: String,
+      currentPlayIndex: Number
+    }
+
+    data = {
+      backgroundAudioManager: null
+      ,src: ''
+      ,audioCtx: null
+      ,timeImgUrl: '../../images/time.png'
+      ,listenImgUrl: '../../images/listen.png'
+      ,commonImgUrl: '../../images/common.png'
+      ,musicImgBg: '../../images/musicBg1.png'
+      ,musicBtnStopImg: '../../images/mu_stop.png'
+      ,musicBtnPlayImg: '../../images/mu_play.png'
+      
+      ,praiseSrc: '../../images/praise.png'
+      ,praisedSrc: '../../images/praised.png'
+    }
+
+    //事件处理函数(集中保存在methods对象中)
+    methods = {
+
+      // 播放当前录音
+      play(mu_id,title,index){
+        // 判断下当前是否已经在播放
+        if( this.currentPlayIndex === index ){
+          this.$emit( "play", -1 )   // 暂停播放
+          this.musicStop();
+        }else{
+          this.$emit('play',index)   // 开始播放
+          this.playRecord(mu_id,title);
+        }
+        this.$apply();
+      },
+
+      // 评论跳转
+      toComment(focus){
+        if(this.noNaviga) return
+        const param = JSON.stringify(this.dataobj);
+        wx.navigateTo({
+          url: `/pages/productDetail/index?dataobj=${param}&focus=${focus}`
+        })
+      },
+
+      // 录音卡点赞
+      praise (index) {
+        this.$emit("praise",index);
+      }
+    }
+    // 下载录音
+    playRecord (mu_id,MU_NAME){
+      let _this = this;
+      wx.downloadFile({
+        url: `https://miaohudong.com/FileTrans/FileDownLoad?mu_id=${mu_id}`,
+        success (res) {
+          // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
+          if (res.statusCode === 200) {
+            console.log('返回录音地址：'+res.tempFilePath)
+            _this.musicPlay( res.tempFilePath, MU_NAME); // 播放录音
+          }
+        },
+        fail(err){
+          console.log('下载录音错误原因')
+          console.log(err)
+        }
+      })
+    }
+
+    // 音乐播放，暂用背景音乐播放（后续优化）
+    musicPlay(src,MU_NAME){
+      this.backgroundAudioManager.title = MU_NAME || '唱嗨'
+      this.backgroundAudioManager.src = src
+      this.backgroundAudioManager.onEnded(res =>{
+        this.$emit( "play", -1 )   // 暂停播放
+        this.$apply()
+      })
+    }
+
+
+    // 音乐暂停
+    musicStop(){
+      this.backgroundAudioManager.stop()   //停止播放
+    }
+
+    onLoad(){
+      this.backgroundAudioManager = wx.getBackgroundAudioManager();
+
+      this.backgroundAudioManager.onEnded(res =>{
+        // 自然播放结束
+        this.$emit( "play", -1 )   // 暂停播放
+        this.$apply()
+      })
+      this.backgroundAudioManager.onError(res =>{
+        tip.error('播放出错')
+        this.$emit( "play", -1 )   // 暂停播放
+        this.$apply()
+      })      
+    }
+      
+  }
+</script>
+<style scope >
+  .record{
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: blueviolet;
+    border-radius: 50%;
+    bottom: 0;
+    left: 50%;
+    margin-left: -25px;
+  }
+
+  .wlhPanel{
+    background-color: white;
+    margin: 12px;
+    padding: 12px;
+  }
+  .wlhPanelLeftBox {
+    -webkit-flex: none;
+            flex: none;
+    width: 57px;
+  }
+  .wlhPanelRightBox {
+    -webkit-flex: 1;
+    flex: 1;
+  }
+  .panelTitle {
+    -webkit-flex: 1;
+    flex: 1;
+    padding: 4px 0 0;
+    line-height: 0;
+  }
+  .imgStyle {
+    width: 49px;
+    height: 49px;
+    border-radius: 50%;
+  }
+  .titleStyle {
+    font-size: 17px;
+    color: #353535;
+    line-height: 20px;
+    font-family:'Microsoft YaHei','Courier New', Courier, monospace;
+  }
+  .timeStyle {
+    font-size: 12px;
+    color: #C6C6C6;
+    line-height: 12px;
+    font-family:'Microsoft YaHei','Courier New', Courier, monospace;
+  }
+
+  .panelMusic{
+    margin-top: 5px;
+    line-height: 0;
+  }
+  .musicBgmBox{
+    -webkit-flex: none;
+            flex: none;
+    width: 57px;
+    height: 48px;
+  }
+  .musicBgmStyle{
+    width: 100%;
+    height: 100%;
+  }
+  .musicPraise{
+    -webkit-flex: 1;
+    flex: 1;
+    background-color: #F3F3F3;
+  }
+  .musicCommon{
+    -webkit-flex: none;
+    flex: none;
+    width: 41px;
+    height: 48px;
+  }
+  .commonStyle{
+    width: 36px;
+    margin-left: 5px;
+    background-color: #F94949;
+    text-align: center;
+    color: white;
+    font-family: 'Microsoft YaHei','Courier New', Courier, monospace;
+  }
+  .commonImgStyle{
+    height: 50%;
+    padding-top: 9px;
+  }
+  .commonTextStyle{
+    height: 50%;
+    font-size: 11px;
+    line-height: 19px;  
+    padding-top:2px;
+  
+  }
+  .commonBgStyle{
+    width: 22px;
+    height: 18px;
+  }
+
+  .praiseTextBox{
+    -webkit-flex: 1;
+    flex: 1;
+    padding-left: 16px;
+  }
+  .praiseBtnBox{
+    -webkit-flex: none;
+            flex: none;
+    width: 50px;
+    height: 100%;
+  }
+  .praiseBtnStyle{
+    width: 100%;
+    text-align: center;
+  }
+  .praiseBtnStyle_1{
+    height: 47%;
+    padding-top: 7px;
+  }
+  .praiseBtnStyle_2{
+    height: 40%;
+    color: #F94949;
+    line-height: 12px;
+    font-size: 12px;
+    margin-top: 6px;
+    font-family: 'Microsoft YaHei','Courier New', Courier, monospace;
+  }
+  .praiseBgStyle{
+    width: 22px;
+    height: 22px;
+  }
+  .praiseTextStyle{
+    margin-top: 13px;
+    line-height: 17px;
+    font-size: 16px;
+    color: #1A1A1A;
+    font-family: 'Microsoft YaHei','Courier New', Courier, monospace;
+  }
+  .timeStyle , .listenNum{
+    width: 10px;
+    height: 10px;
+    position: relative;
+    top: 2px;
+  }
+  .listenNum{
+    margin-left: 14px;
+  }
+  .textSmall{
+    color: #888888;
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  .musicBtn{
+    height:30px;
+    background-color:#ffffff87;
+    position:relative;
+    top:-39px;
+    border-radius:50%;
+    width:30px;
+    margin-left:13px;
+  }
+  .musicBtnImg{
+    width: 100%;
+    height: 100%;
+  }
+  @media screen and (min-width: 100px) and (max-width:350px) {
+    .musicBgmBox {
+      width: 50px;
+    }
+    .praiseTextBox{
+      -webkit-flex: 1;
+      flex: 1;
+      padding-left: 6px;
+    }
+    .praiseBtnBox {
+      -webkit-flex:none;
+      flex:none;
+      width:36px;
+      height:100%;
+    }
+    .listenNum{
+      margin-left: 8px;
+    }
+    .praiseTextStyle{
+      margin-top: 13px;
+      line-height: 17px;
+      font-size: 16px;
+      color: #1A1A1A;
+      max-width: 82px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-family: 'Microsoft YaHei','Courier New', Courier, monospace;
+    }
+  }
+</style>
