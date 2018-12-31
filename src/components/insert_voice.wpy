@@ -16,6 +16,9 @@ import wepy from "wepy"
 import tip from '@/utils/tip'
 import Session from '@/utils/session'
 import staticData from '@/utils/staticData'
+import Host from '@/utils/host'
+
+const loginKey = Session.key.login
 
 export default class insert_voice extends wepy.component {
   data = {
@@ -88,7 +91,7 @@ export default class insert_voice extends wepy.component {
         filePath: this.voiceSrc,
         header: { 
           'content-type': 'multipart/form-data',
-          'session_id': Session.get('weapp_login_session')
+          'session_id': Session.get(loginKey)
         },
         name: 'file',
         formData: {

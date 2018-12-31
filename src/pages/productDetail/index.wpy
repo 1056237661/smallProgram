@@ -26,8 +26,7 @@ import tip from '@/utils/tip'
 import comment_input from "@/components/comment_input"
 import comment_input_focus from "@/components/comment_input_focus"
 import recordCard from "@/components/record-card"
-
-import TestMixin from '../../mixins/fun'
+import Publick_fun from '../../mixins/publick_fun'
 
 export default class ProductDetail extends wepy.page {
   config = {
@@ -46,7 +45,7 @@ export default class ProductDetail extends wepy.page {
     currentPlayIndex: -1
   }
 
-  mixins = [TestMixin]
+  mixins = [Publick_fun]
 
   components = {
     comment_input: comment_input,
