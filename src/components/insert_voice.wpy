@@ -188,7 +188,10 @@ export default class insert_voice extends wepy.component {
 
   // 开始录音
   startRecordMp3() {
-    this.recorderManager.start({ format: 'mp3' });
+    this.recorderManager.start({ 
+      format: 'mp3',
+      sampleRate: 48000
+    });
   }
 
   // 录音计时

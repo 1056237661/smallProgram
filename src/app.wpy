@@ -48,7 +48,7 @@ export default class extends wepy.app {
       ,navigationBarTitleText: 'WeChat'
       ,navigationBarTextStyle: 'white'
       ,enablePullDownRefresh: true
-      ,onReachBottomDistance: 5
+      ,onReachBottomDistance: 8
       ,backgroundTextStyle: 'dark'
     },
     tabBar: {
