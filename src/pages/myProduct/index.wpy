@@ -16,6 +16,7 @@ import publick_fun from '../../mixins/publick_fun'
 
 import recordCard from '@/components/record-card'
 import noData from '@/components/noData'
+import wx_req from '@/utils/wxRequest/wx_req'
 
 export default class MyProduct extends wepy.page {
   config = {
@@ -61,6 +62,10 @@ export default class MyProduct extends wepy.page {
     let dataList = await wxRequest.Get('/mydb/Get_UsersMusic',this.page)
     this.dataList = dataList.list;
     this.Get_MessageCount();
+
+    // 显示转发
+    wx_req.showShareMenu();
+    
     this.$apply();
   }
   

@@ -58,6 +58,10 @@ export default class Index extends wepy.page {
   async onShow(){
     this.userinfo = await wxRequest.Get('/mydb/Get_UserInfo')
     this.Get_MessageCount();
+
+    // 显示转发
+    wx_req.showShareMenu();
+    
     this.$apply();
   }
 

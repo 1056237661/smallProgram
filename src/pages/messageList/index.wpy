@@ -15,6 +15,7 @@ import tip from '@/utils/tip'
 
 import new_list from '@/components/news_list'
 import noData from '@/components/noData'
+import wx_req from '@/utils/wxRequest/wx_req'
 
 export default class MessageList extends wepy.page {
   config = {
@@ -39,6 +40,8 @@ export default class MessageList extends wepy.page {
 
   onShow(){
     this.getList();
+    // 显示转发
+    wx_req.showShareMenu();
   }
 
   // 获取信息

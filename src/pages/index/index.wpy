@@ -88,26 +88,6 @@ export default class Index extends wepy.page {
         this.$apply();
       }
     },
-    // 
-    onShareAppMessage: function (ops) {
-      if (ops.from === 'button') {
-        // 来自页面内转发按钮
-        console.log(ops.target)
-      }
-      return {
-        title: 'xx小程序',
-        path: 'pages/index/index',
-        success: function (res) {
-          // 转发成功
-          console.log("转发成功:" + JSON.stringify(res));
-        },
-        fail: function (res) {
-          // 转发失败
-          console.log("转发失败:" + JSON.stringify(res));
-        }
-      }
-
-    },
     getList(){
       this.getPreOrders();
     }
@@ -134,6 +114,10 @@ export default class Index extends wepy.page {
     this.pageFlag && ( wx.showTabBar(), this.getPreOrders() );// 加载列表
     !this.pageFlag && (wx.hideTabBar(),this.getPreOrders(4));
     this.$apply();
+
+    // 显示转发
+    wx_req.showShareMenu();
+
   }
 
   // 下拉刷新
@@ -175,7 +159,7 @@ export default class Index extends wepy.page {
     this.$apply()
   }
   
-  onShow () {
+  onShow() {
     this.$invoke('recordcard', 'musicStop');
     this.Get_MessageCount();
   }

@@ -14,6 +14,7 @@ import wxRequest from '@/utils/wxRequest'
 import recordCard from '@/components/record-card'
 import noData from '@/components/noData'
 import publick_fun from '../../mixins/publick_fun'
+import wx_req from '@/utils/wxRequest/wx_req'
 
 export default class Praised extends wepy.page {
   
@@ -61,7 +62,13 @@ export default class Praised extends wepy.page {
     let dataList = await wxRequest.Get('/mydb/Get_UsersLike',this.page)
     this.dataList = dataList.list;
     this.Get_MessageCount();
+    
     this.$apply();
+  }
+
+  onLoad(){
+    // 显示转发
+    wx_req.showShareMenu();
   }
   
   onHide() {

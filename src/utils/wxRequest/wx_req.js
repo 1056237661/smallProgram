@@ -70,4 +70,9 @@ export default class wx_req{
     return Session.get(loginKey) || null ; 
   }
 
+  // 配置转发
+  static showShareMenu(){
+    wx.showShareMenu({ withShareTicket: true })
+  }
+
 }
