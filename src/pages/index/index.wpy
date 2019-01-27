@@ -108,18 +108,6 @@ export default class Index extends wepy.page {
     return true;
   }
 
-  //页面的生命周期函数
-  async onLoad() {
-    this.pageFlag = wx_req.getSession_id() || false ;
-    this.pageFlag && ( wx.showTabBar(), this.getPreOrders() );// 加载列表
-    !this.pageFlag && (wx.hideTabBar(),this.getPreOrders(4));
-    this.$apply();
-
-    // 显示转发
-    wx_req.showShareMenu();
-
-  }
-
   // 下拉刷新
   async onPullDownRefresh(){
     if(this.pageFlag){
@@ -157,6 +145,18 @@ export default class Index extends wepy.page {
   playMusic(index){
     this.currentPlayIndex = index
     this.$apply()
+  }
+  
+  //页面的生命周期函数
+  async onLoad() {
+    this.pageFlag = wx_req.getSession_id() || false ;
+    this.pageFlag && ( wx.showTabBar(), this.getPreOrders() );// 加载列表
+    !this.pageFlag && (wx.hideTabBar(),this.getPreOrders(4));
+    this.$apply();
+
+    // 显示转发
+    wx_req.showShareMenu();
+
   }
   
   onShow() {

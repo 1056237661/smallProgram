@@ -40,8 +40,10 @@ export default class MessageList extends wepy.page {
 
   onShow(){
     this.getList();
-    // 显示转发
-    wx_req.showShareMenu();
+  }
+
+  onLoad(){
+    // wx_req.showShareMenu();  // 显示转发
   }
 
   // 获取信息
@@ -55,7 +57,6 @@ export default class MessageList extends wepy.page {
     !this.listData.length && (this.noDataText = '世界辣么大，咱就没人联系我😡');
     wx.removeTabBarBadge({index: 0})  // 清除徽章
     this.$apply();
-    // tip.loaded();
   }
 
   // 下拉刷新

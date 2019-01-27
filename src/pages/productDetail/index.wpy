@@ -109,7 +109,7 @@ export default class ProductDetail extends wepy.page {
     this.$apply();
 
     // 显示转发
-    wx_req.showShareMenu();
+    // wx_req.showShareMenu();
   }
 
   onShow(){

@@ -1,0 +1,18 @@
+<template lang="pug">
+
+  .mask( wx:if="{{!pageFlag}}" )
+  .mask_inner(wx:if="{{!pageFlag}}")
+    image.mask_imgBox( src='{{ mask_img }}')
+    view.mask_text 唱嗨你我，欢迎回家
+    button.mask_btn(open-type="getUserInfo" bindgetuserinfo="bindGetUserInfo") 马上进门
+  
+</template>
+
+<script>
+import wepy from 'wepy'
+
+export default class authorization_mask extends wepy.component{
+  
+}
+</script>
+

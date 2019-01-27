@@ -190,7 +190,8 @@ export default class insert_voice extends wepy.component {
   startRecordMp3() {
     this.recorderManager.start({ 
       format: 'mp3',
-      sampleRate: 48000
+      sampleRate: 48000,
+      encodeBitRate: 64000
     });
   }
 

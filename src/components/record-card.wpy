@@ -1,6 +1,6 @@
 <template lang='pug'>
-  //- repeat( for="{{dataobj}}" key="index" index="index" item="item")
   view.wlhPanel.flex.box
+    view.isMyself(wx:if='{{ dataobj.MYSELF_STATUE }}')
     view.wlhPanelLeftBox
       image.imgStyle(src='{{ dataobj.US_IMGURL }}')
     view.wlhPanelRightBox( @tap='toComment(0)')
@@ -154,6 +154,17 @@
   }
 </script>
 <style scope >
+  /* 是否为自己的 */
+  .isMyself{
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-width: 10px;
+    border-style: solid;
+    border-color: #F94949 transparent transparent #F94949;
+    top: 0;
+    left: 0;
+  }
   .record{
     position: absolute;
     width: 50px;
@@ -166,6 +177,7 @@
   }
 
   .wlhPanel{
+    position: relative;
     background-color: white;
     margin: 12px;
     padding: 12px;

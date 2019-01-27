@@ -58,14 +58,14 @@ export default class MyProduct extends wepy.page {
     },
   }
 
+  onLoad(){
+    // wx_req.showShareMenu();  // 显示转发
+  }
+
   async onShow(){
     let dataList = await wxRequest.Get('/mydb/Get_UsersMusic',this.page)
     this.dataList = dataList.list;
-    this.Get_MessageCount();
-
-    // 显示转发
-    wx_req.showShareMenu();
-    
+    this.Get_MessageCount();    
     this.$apply();
   }
   

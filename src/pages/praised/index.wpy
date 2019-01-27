@@ -67,8 +67,7 @@ export default class Praised extends wepy.page {
   }
 
   onLoad(){
-    // 显示转发
-    wx_req.showShareMenu();
+    // wx_req.showShareMenu();  // 显示转发
   }
   
   onHide() {
