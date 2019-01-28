@@ -2,7 +2,7 @@
   
   //- 录音列表
   repeat( for="{{dataList}}" key="index" index="index" item="item")
-    recordcard( :dataobj.sync="item", :showCom="showCom", :index.sync='index', @praise.user='praise', @play.user='playMusic' :currentPlayIndex.sync='currentPlayIndex')
+    recordcard( :dataobj.sync="item", :showCom="showCom", :index.sync='index', @praise.user='praise', @play.user='playMusic', :currentPlayIndex.sync='currentPlayIndex', :isMyself='1', @refresh.user='getList')
   
   noData(wx:if="{{ dataList.length == 0 }}" :text="noDataText")
             
@@ -56,6 +56,9 @@ export default class MyProduct extends wepy.page {
       this.currentPlayIndex = index
       this.$apply()
     },
+    getList(){
+      this.getDataList();
+    }
   }
 
   onLoad(){
@@ -63,12 +66,17 @@ export default class MyProduct extends wepy.page {
   }
 
   async onShow(){
+    this.getDataList()
+    this.Get_MessageCount()    
+    this.$apply()
+  }
+
+  async getDataList(){
     let dataList = await wxRequest.Get('/mydb/Get_UsersMusic',this.page)
-    this.dataList = dataList.list;
-    this.Get_MessageCount();    
+    this.dataList = dataList.list;  
     this.$apply();
   }
-  
+
   onHide() {
     this.$invoke('recordcard', 'musicStop');
   }

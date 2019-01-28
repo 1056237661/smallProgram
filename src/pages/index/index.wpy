@@ -1,7 +1,7 @@
 <template lang='pug'>
   //- 录音列表
   repeat( for="{{dataList}}" key="index" index="index" item="item")
-    recordcard( :dataobj.sync="item", :showCom="showCom", :index.sync='index', @praise.user='praise', @play.user='playMusic' :currentPlayIndex.sync='currentPlayIndex')
+    recordcard( :dataobj.sync="item", :showCom="showCom", :index.sync='index', @praise.user='praise', @play.user='playMusic' :currentPlayIndex.sync='currentPlayIndex', @refresh.user='getList')
   
   insert_voice( @refresh.user='getList')
 

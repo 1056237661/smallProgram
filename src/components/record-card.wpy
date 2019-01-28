@@ -1,6 +1,10 @@
 <template lang='pug'>
   view.wlhPanel.flex.box
-    view.isMyself(wx:if='{{ dataobj.MYSELF_STATUE }}')
+    view.isMyself(wx:if='{{ dataobj.MYSELF_STATUE || isMyself }}')
+    view.operaBtn( @tap='delete({{ dataobj.MU_ID }})', wx:if='{{ isMyself }}')
+      image.garbageImg(src='{{ garbageImg }}')
+
+
     view.wlhPanelLeftBox
       image.imgStyle(src='{{ dataobj.US_IMGURL }}')
     view.wlhPanelRightBox( @tap='toComment(0)')
@@ -36,6 +40,7 @@
 <script>
   import wepy from 'wepy'
   import tip from '@/utils/tip'
+  import wxRequest from '@/utils/wxRequest'
 
   export default class RecordCard extends wepy.component {
     props = {
@@ -45,6 +50,10 @@
         twoWay: true
       },
       showCom: {
+        type: Boolean,
+        default: false
+      },
+      isMyself: {
         type: Boolean,
         default: false
       },
@@ -66,13 +75,25 @@
       ,musicImgBg: '../../images/musicBg1.png'
       ,musicBtnStopImg: '../../images/mu_stop.png'
       ,musicBtnPlayImg: '../../images/mu_play.png'
-      
+      ,garbageImg: '../../images/garbage.png'
       ,praiseSrc: '../../images/praise.png'
       ,praisedSrc: '../../images/praised.png'
     }
 
     //事件处理函数(集中保存在methods对象中)
     methods = {
+      delete(mu_id){
+        let that = this;
+        wx.showModal({
+          content: '确定删除？',
+          async success(res){
+            if(res.confirm){
+              let data = await wxRequest.Post('/mydb/Delete_Music', {mu_id: mu_id})
+              that.$emit('refresh') //刷新
+            }
+          }
+        })
+      },
 
       // 播放当前录音
       play(mu_id,title,index){
@@ -164,6 +185,18 @@
     border-color: #F94949 transparent transparent #F94949;
     top: 0;
     left: 0;
+  }
+  /* 操作 */
+  .operaBtn{
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top:5px;
+    right:5px;
+  }
+  .garbageImg{
+    width: 100%;
+    height: 100%;
   }
   .record{
     position: absolute;
