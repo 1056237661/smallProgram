@@ -1,10 +1,11 @@
 <template lang='pug'>
   //- 歌词框
-  //- view.Box_song
+  view.Box_song
     view.topTitle_song
       text.title_song 查看歌词
-      view.change_song
-        image( src='{{ changeImg }}' )
+      text.change_song 换一批
+    view.content_song
+
 
   //- 录音列表
   repeat( for="{{dataList}}" key="index" index="index" item="item")
@@ -161,7 +162,6 @@ export default class Index extends wepy.page {
     this.pageFlag && ( wx.showTabBar(), this.getPreOrders() );// 加载列表
     !this.pageFlag && (wx.hideTabBar(),this.getPreOrders(4));
     this.$apply();
-
     // 显示转发
     wx_req.showShareMenu();
 
@@ -188,7 +188,22 @@ export default class Index extends wepy.page {
     position: relative;
     background-color: white;
     margin: 12px;
-    padding: 12px;
+    padding: 6px 12px;
+  }
+  .title_song{
+    font-size: 17px;
+    font-weight: bolder;
+  }
+  .change_song{
+    float: right;
+    font-size:14px;
+    color:#F94949;
+    font-weight:bolder;
+    line-height:28px;
+  }
+  .content_song{
+    height: 200px;
+    color: #000000;
   }
   /* 歌词部分 end */
 
