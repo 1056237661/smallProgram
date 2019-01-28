@@ -1,4 +1,11 @@
 <template lang='pug'>
+  //- 歌词框
+  //- view.Box_song
+    view.topTitle_song
+      text.title_song 查看歌词
+      view.change_song
+        image( src='{{ changeImg }}' )
+
   //- 录音列表
   repeat( for="{{dataList}}" key="index" index="index" item="item")
     recordcard( :dataobj.sync="item", :showCom="showCom", :index.sync='index', @praise.user='praise', @play.user='playMusic' :currentPlayIndex.sync='currentPlayIndex', @refresh.user='getList')
@@ -44,6 +51,7 @@ export default class Index extends wepy.page {
     loading: true,   // 默认加载中
     src: '',
     mask_img: '../../images/auth.jpg',
+    changeImg: '../../images/refresh.png', 
     praisesrc: '../../images/praised.png',
     page:{
       PageNo: 1,
@@ -174,6 +182,15 @@ export default class Index extends wepy.page {
 
 
 <style>
+  /* 歌词部分 start */
+  .Box_song{
+    height: auto;
+    position: relative;
+    background-color: white;
+    margin: 12px;
+    padding: 12px;
+  }
+  /* 歌词部分 end */
 
   .mask{
     width: 100%;

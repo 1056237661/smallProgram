@@ -1,10 +1,10 @@
 <template lang='pug'>
   view.wlhPanel.flex.box
+  
     view.isMyself(wx:if='{{ dataobj.MYSELF_STATUE || isMyself }}')
     view.operaBtn( @tap='delete({{ dataobj.MU_ID }})', wx:if='{{ isMyself }}')
       image.garbageImg(src='{{ garbageImg }}')
-
-
+      
     view.wlhPanelLeftBox
       image.imgStyle(src='{{ dataobj.US_IMGURL }}')
     view.wlhPanelRightBox( @tap='toComment(0)')
@@ -88,7 +88,7 @@
           content: '确定删除？',
           async success(res){
             if(res.confirm){
-              let data = await wxRequest.Post('/mydb/Delete_Music', {mu_id: mu_id})
+              let data = await wxRequest.Get('/mydb/Delete_Music', {mu_id: mu_id})
               that.$emit('refresh') //刷新
             }
           }
