@@ -89,6 +89,7 @@
           async success(res){
             if(res.confirm){
               let data = await wxRequest.Get('/mydb/Delete_Music', {mu_id: mu_id})
+              tip.success('成功删除！')
               that.$emit('refresh') //刷新
             }
           }
