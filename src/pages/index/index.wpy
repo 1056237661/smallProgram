@@ -1,12 +1,29 @@
 <template lang='pug'>
+
   //- 歌词框
   view.Box_song
     view.topTitle_song
       text.title_song 查看歌词
-      text.change_song 换一批
+      view
+        image.lyricsChangeImg(src='{{ lyricsChangeImg }}')
+        text.change_song(@tap='getLyricsList') 换一批
     view.content_song
+      repeat(for='{{lyricsList}}' key="index" index="index" item="item")
+        text.song_song( @tap='seeLyric({{item}})', style='order:{{item.S_NAME.length}}' class='flex{{ item.S_NAME.length }}') {{ item.S_NAME }}
 
+  //- 歌词弹窗
+  image.lyricsMask_bg( src='{{lyricsMaskImg}}', style='display:{{ lyricsMaskFlag }}')
+  view.lyricsMask(style='display:{{ lyricsMaskFlag }}')
+    icon.closeBtn( @tap='closeLyric', type='clear' size='24' color='#F94949')
+    view.lyrics_scroll
+      repeat(for='{{ currentLyrics.S_IYRICS || [] }}' key='index' index='index' item='item')
+        view(style='padding:4px 0;') {{item}}
 
+    view.lyricsFooter - {{ currentLyrics.S_SINGER }}·{{ currentLyrics.S_NAME }}
+    view.tiptext 这首歌很好听，唱一唱吧！
+    //- view.trigon
+    
+    
   //- 录音列表
   repeat( for="{{dataList}}" key="index" index="index" item="item")
     recordcard( :dataobj.sync="item", :showCom="showCom", :index.sync='index', @praise.user='praise', @play.user='playMusic' :currentPlayIndex.sync='currentPlayIndex', @refresh.user='getList')
@@ -48,18 +65,24 @@ export default class Index extends wepy.page {
   mixins = [Publick_fun]
 
   data = {
+    lyricsMaskFlag: 'none', 
+
     pageFlag: true,
     loading: true,   // 默认加载中
     src: '',
     mask_img: '../../images/auth.jpg',
     changeImg: '../../images/refresh.png', 
+    lyricsMaskImg: '../../images/bg.jpg',
     praisesrc: '../../images/praised.png',
+    lyricsChangeImg: '../../images/refresh.png',
     page:{
       PageNo: 1,
       PageSize: 10
     },
     total:0,
-    dataList:[],
+    dataList:[],     // 语音列表
+    lyricsList: [],  // 歌词列表
+    currentLyrics: ['暂无歌词'],
     showCom: true,
     currentPlayIndex: -1
   }
@@ -98,7 +121,21 @@ export default class Index extends wepy.page {
       }
     },
     getList(){
-      this.getPreOrders();
+      this.getPreOrders()
+      this.lyricsMaskFlag = 'none'
+      this.currentLyrics = {}
+      this.$apply()
+    },
+    seeLyric(item){
+      item.S_IYRICS = item.S_IYRICS ? item.S_IYRICS.split('，') : ['暂无歌词']
+      this.currentLyrics = item
+      this.lyricsMaskFlag = 'black'
+      this.$apply()
+    },
+    closeLyric(){
+      this.lyricsMaskFlag = 'none'
+      this.currentLyrics = {}
+      this.$apply()
     }
   }
 
@@ -115,6 +152,16 @@ export default class Index extends wepy.page {
     this.$apply()
     tip.loaded();
     return true;
+  }
+
+  async getLyricsList() {
+    this.lyricsList = await wxRequest.Get('/mydb/Get_Iyrics')
+
+    // this.lyricsList.forEach(item => {
+    //   item.S_NAME_2 = item.S_NAME.length > 6 ? `${item.S_NAME.substr(0,6)}···` : item.S_NAME ;
+    // });
+
+    this.$apply()
   }
 
   // 下拉刷新
@@ -161,10 +208,10 @@ export default class Index extends wepy.page {
     this.pageFlag = wx_req.getSession_id() || false ;
     this.pageFlag && ( wx.showTabBar(), this.getPreOrders() );// 加载列表
     !this.pageFlag && (wx.hideTabBar(),this.getPreOrders(4));
+    this.getLyricsList();
     this.$apply();
     // 显示转发
     wx_req.showShareMenu();
-
   }
   
   onShow() {
@@ -190,9 +237,13 @@ export default class Index extends wepy.page {
     margin: 12px;
     padding: 6px 12px;
   }
+  .topTitle_song{
+    display: flex;
+    justify-content: space-between;
+  }
   .title_song{
     font-size: 17px;
-    font-weight: bolder;
+    font-weight: 500;
   }
   .change_song{
     float: right;
@@ -202,8 +253,116 @@ export default class Index extends wepy.page {
     line-height:28px;
   }
   .content_song{
-    height: 200px;
+    height:107px;
+
+    display: flex;
+    display: -webkit-flex;
+    flex-wrap: wrap;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    justify-content: space-between;
+
+    padding: 5px 0;
     color: #000000;
+    overflow: hidden;
+  }
+  .song_song{
+    color: #626364;
+    border:1px solid #626364;
+    border-radius:6px;
+    padding:0 8px;
+    font-size: 15px;
+    overflow: hidden;
+    margin: 5px;
+
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+
+    flex: auto;
+    width: auto;
+    
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    align-content: center;
+    text-align: center;
+  }
+  .selected_song{
+    color: #F94949;
+    border:1px solid #F94949;
+  }
+
+  .lyrics_scroll{
+    width: 100%;
+    height: 236px;
+    color: #818181;
+    overflow: auto;
+    padding: 0 20px;
+    margin-top: 50px;
+    text-align: center;
+    font-size: 15px;
+
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+  .lyricsMask_bg{
+    position:absolute;
+    top: 12%;
+    width:76%;
+    height:374px;
+    margin-left:12%;
+    border-radius: 5px;
+    z-index: 1;
+  }
+  .lyricsChangeImg{
+    width:15px;
+    height:15px;
+    margin:6px 4px 0 0;
+  }
+
+  .lyricsMask{
+    box-shadow:2px 2px 13px #aaaaaa;
+    border-radius: 5px;
+
+    position:absolute;
+    top: 12%;
+    width:76%;
+    height:374px;
+    margin-left:12%;
+    z-index: 2;
+
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+  .closeBtn{
+    position: absolute;
+    cursor: pointer;
+    right:12px;
+    top:12px;
+  }
+  .lyricsFooter{
+    text-align:right; 
+    padding: 16px 20px;
+    color: #818181;
+    font-size:15px;
+  }
+  .tiptext{
+    margin-top: 5px;
+    text-align: center;
+    font-size: 13px;
+    color: #F94949;
+  }
+  .trigon{
+    width: 0;
+    border-width: 7px;
+    border-style: solid;
+    border-color: #F94949 transparent transparent transparent;
+    position:relative;
+    margin-left:50%;
+    left:-7px;
   }
   /* 歌词部分 end */
 
@@ -419,6 +578,20 @@ export default class Index extends wepy.page {
     .listenNum{
       margin-left: 8px;
     }
+
+    /* 歌词卡兼容 */
+    .lyricsMask_bg{
+      height: 287px;
+    }
+    .lyricsMask{
+      height: 287px;  
+    }
+    .lyrics_scroll {
+      margin-top:36px;
+      height: 188px;
+    }
+    .lyricsFooter{
+      padding: 4px 20px;
+    }
   }
 </style>
-
